@@ -1,0 +1,66 @@
+import cv2
+import matplotlib.pyplot as plt
+
+def detect_faces(image):
+    # Convert the image to grayscale before performing facial detections
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Load the classifiers
+    face_classifier = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+
+    # Perform face detections
+    faces = face_classifier.detectMultiScale(gray_image, scaleFactor=1.1, minNeighbors=5, minSize=(40, 40))
+
+    # Drawing bounding boxes
+    for (x, y, w, h) in faces:
+        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 4)
+
+    return image
+
+def process_image(image_path):
+    # Read the image
+    img = cv2.imread(image_path)
+
+    # Perform face detection
+    img_with_faces = detect_faces(img)
+
+    # Display the image with faces
+    img_rgb = cv2.cvtColor(img_with_faces, cv2.COLOR_BGR2RGB)
+    plt.figure(figsize=(20, 10))
+    plt.imshow(img_rgb)
+    plt.axis('off')
+    plt.show()
+
+def process_video(video_path):
+    # Open the video capture
+    cap = cv2.VideoCapture(video_path)
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+
+        if not ret:
+            break
+
+        # Perform face detection on each frame
+        frame_with_faces = detect_faces(frame)
+
+        # Display the frame with faces
+        cv2.imshow('Face Detection', frame_with_faces)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+# Choose whether to process an image or a video
+source_type = input("Enter 'image' or 'video': ").lower()
+
+if source_type == 'image':
+    image_path = input("Enter the path to the image: ")
+    process_image(image_path)
+elif source_type == 'video':
+    video_path = input("Enter the path to the video: ")
+    process_video(video_path)
+else:
+    print("Invalid source type. Please enter 'image' or 'video'.")
