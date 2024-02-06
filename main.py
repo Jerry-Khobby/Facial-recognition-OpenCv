@@ -39,3 +39,38 @@ plt.figure(figsize=(20,10))
 plt.imshow(img_rgb)
 plt.axis('off')
 plt.show()
+
+
+
+#After working on the static images we have start a whole new chapter on 
+#working streaming video 
+# we need to have access to our webcam 
+video_capture=cv2.VideoCapture(0)
+""" Now, lets create a function to detect faces in the video stream and draw a bounding box around them: """
+def detect_bounding_box(vid):
+    gray_image = cv2.cvtColor(vid, cv2.COLOR_BGR2GRAY)
+    faces = face_classifier.detectMultiScale(gray_image, 1.1, 5, minSize=(40, 40))
+    for (x, y, w, h) in faces:
+        cv2.rectangle(vid, (x, y), (x + w, y + h), (0, 255, 0), 4)
+    return faces
+
+
+while True:
+
+    result, video_frame = video_capture.read()  # read frames from the video
+    if result is False:
+        break  # terminate the loop if the frame is not read successfully
+
+    faces = detect_bounding_box(
+        video_frame
+    )  # apply the function we created to the video frame
+
+    cv2.imshow(
+        "My Face Detection Project", video_frame
+    )  # display the processed frame in a window named "My Face Detection Project"
+
+    if cv2.waitKey(1) & 0xFF == ord("q"):
+        break
+
+video_capture.release()
+cv2.destroyAllWindows()
