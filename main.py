@@ -25,11 +25,11 @@ def compare_faces(detected_face_encoding):
 
     try:
         # Retrieve student names and face encodings from the database
-        cur.execute("SELECT name, face_encoding FROM student_passports")
+        cur.execute("SELECT name, passport_image, face_encoding FROM student_passports")
         rows = cur.fetchall()
 
-        for name, db_face_encoding in rows:
-            db_face_encoding = np.frombuffer(db_face_encoding, dtype=np.float64)
+        for name, passport_image, face_encoding_bytes in rows:
+            db_face_encoding = np.frombuffer(face_encoding_bytes, dtype=np.float64)
             db_face_encoding = db_face_encoding.reshape((128,))
 
             # Compare the detected face with each face in the database
@@ -100,7 +100,11 @@ def detect_faces_webcam(scaleFactor=1.1, minNeighbors=5, minSize=(40, 40)):
 
         for (x, y, w, h) in faces:
             detected_face = video_frame[y:y+h, x:x+w]
-            detected_face_encoding = face_recognition.face_encodings(detected_face)
+            
+            # Convert BGR to RGB
+            detected_face_rgb = cv2.cvtColor(detected_face, cv2.COLOR_BGR2RGB)
+            
+            detected_face_encoding = face_recognition.face_encodings(detected_face_rgb)
             
             if len(detected_face_encoding) > 0:
                 name = compare_faces(detected_face_encoding[0])
@@ -119,6 +123,7 @@ def detect_faces_webcam(scaleFactor=1.1, minNeighbors=5, minSize=(40, 40)):
     cv2.destroyAllWindows()
 
 
+
 def main(input_path, scaleFactor=1.1, minNeighbors=5, minSize=(40, 40)):
     if input_path.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp')):
         detect_faces_image(input_path, scaleFactor, minNeighbors, minSize)
@@ -126,6 +131,10 @@ def main(input_path, scaleFactor=1.1, minNeighbors=5, minSize=(40, 40)):
         detect_faces_video(input_path, scaleFactor, minNeighbors, minSize)
     elif input_path.lower() == 'webcam':
         detect_faces_webcam(scaleFactor, minNeighbors, minSize)
+            # Assuming detected_face_encoding is the detected face encoding
+        detected_face_encoding = np.random.rand(128)  # Example detected face encoding
+        name = compare_faces(detected_face_encoding)
+        print("Matched Student Name:", name)
     else:
         print("Unsupported input")
 
