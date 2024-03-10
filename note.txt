@@ -1,235 +1,28 @@
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import accuracy_score
 
-face_classifier = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+# Load the dataset and extract faces (similar to previous code)
+def load_faces(dataset_dir):
+    # Load and preprocess images, detect faces, etc.
+    ...
 
-# Define known faces with their embeddings
-known_faces = {
-    "person1": face_embedding1,
-    "person2": face_embedding2,
-    # Add more as needed
-}
+# Preprocess faces, split the dataset, encode labels, etc.
+faces, labels = load_faces(dataset_dir)
+...
 
-def compare_faces(detected_face_embedding, known_faces):
-    similarities = {}
-    for name, known_face_embedding in known_faces.items():
-        similarity = cosine_similarity(detected_face_embedding.reshape(1, -1), known_face_embedding.reshape(1, -1))[0][0]
-        similarities[name] = similarity
-    
-    # Get the name with highest similarity
-    best_match = max(similarities, key=similarities.get)
-    best_similarity = similarities[best_match]
-    
-    threshold = 0.5  # Set a threshold for similarity
-    if best_similarity > threshold:
-        return best_match, True  # Return the name and True if match found
-    else:
-        return "Unknown", False  # Return "Unknown" and False if no match found
+# Create and train the face recognizer
+face_recognizer = cv2.face.LBPHFaceRecognizer_create()
+face_recognizer.train(faces, labels)
 
-def detect_faces_image(image_path, scaleFactor=1.1, minNeighbors=5, minSize=(40, 40)):
-    img = cv2.imread(image_path)
-    gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    
-    faces = face_classifier.detectMultiScale(gray_image, scaleFactor=scaleFactor, minNeighbors=minNeighbors, minSize=minSize)
-    
-    for (x, y, w, h) in faces:
-        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 4)
-        
-        # Get the detected face embedding (assuming you have a function to get it)
-        detected_face_embedding = get_face_embedding(img, (x, y, w, h))
-        
-        # Compare the detected face with known faces
-        name, is_match = compare_faces(detected_face_embedding, known_faces)
-        
-        if is_match:
-            cv2.putText(img, name, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
-        else:
-            cv2.putText(img, "Unknown", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
-    
-    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    plt.figure(figsize=(20,10))
-    plt.imshow(img_rgb)
-    plt.axis('off')
-    plt.show()
+# Evaluate the model (for demonstration purposes)
+predictions = []
+for face in X_test:
+    label, _ = face_recognizer.predict(face)
+    predictions.append(label)
 
-def detect_faces_video(video_path, scaleFactor=1.1, minNeighbors=5, minSize=(40, 40)):
-    video_capture = cv2.VideoCapture(video_path)
-
-    while True:
-        result, video_frame = video_capture.read()
-        if not result:
-            break
-
-        gray_image = cv2.cvtColor(video_frame, cv2.COLOR_BGR2GRAY)
-        faces = face_classifier.detectMultiScale(gray_image, scaleFactor=scaleFactor, minNeighbors=minNeighbors, minSize=minSize)
-
-        for (x, y, w, h) in faces:
-            cv2.rectangle(video_frame, (x, y), (x + w, y + h), (0, 255, 0), 4)
-            
-            # Get the detected face embedding (assuming you have a function to get it)
-            detected_face_embedding = get_face_embedding(video_frame, (x, y, w, h))
-            
-            # Compare the detected face with known faces
-            name, is_match = compare_faces(detected_face_embedding, known_faces)
-            
-            if is_match:
-                cv2.putText(video_frame, name, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
-            else:
-                cv2.putText(video_frame, "Unknown", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
-
-        cv2.imshow("My Face Detection Project", video_frame)
-
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
-
-    video_capture.release()
-    cv2.destroyAllWindows()
-
-def detect_faces_webcam(scaleFactor=1.1, minNeighbors=5, minSize=(40, 40)):
-    video_capture = cv2.VideoCapture(0)  # Use webcam (change the index if needed)
-
-    while True:
-        result, video_frame = video_capture.read()
-        if not result:
-            break
-
-        gray_image = cv2.cvtColor(video_frame, cv2.COLOR_BGR2GRAY)
-        faces = face_classifier.detectMultiScale(gray_image, scaleFactor=scaleFactor, minNeighbors=minNeighbors, minSize=minSize)
-
-        for (x, y, w, h) in faces:
-            cv2.rectangle(video_frame, (x, y), (x + w, y + h), (0, 255, 0), 4)
-            
-            # Get the detected face embedding (assuming you have a function to get it)
-            detected_face_embedding = get_face_embedding(video_frame, (x, y, w, h))
-            
-            # Compare the detected face with known faces
-            name, is_match = compare_faces(detected_face_embedding, known_faces)
-            
-            if is_match:
-                cv2.putText(video_frame, name, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
-            else:
-                cv2.putText(video_frame, "Unknown", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
-
-        cv2.imshow("My Face Detection Project", video_frame)
-
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
-
-    video_capture.release()
-    cv2.destroyAllWindows()
-
-def main(input_path, scaleFactor=1.1, minNeighbors=5, minSize=(40, 40)):
-    if input_path.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp')):
-        detect_faces_image(input_path, scaleFactor, minNeighbors, minSize)
-    elif input_path.lower().endswith(('.mp4', '.avi', '.mov')):
-        detect_faces_video(input_path, scaleFactor, minNeighbors, minSize)
-    elif input_path.lower() == 'webcam':
-        detect_faces_webcam(scaleFactor, minNeighbors, minSize)
-    else:
-        print("Unsupported input")
-
-if __name__ == "__main__":
-    input_path = "webcam"  # Change this to the path of your image, video file, or "webcam"
-    main(input_path, scaleFactor=1.1, minNeighbors=5, minSize=(40, 40))
-
-
-
-
-
-import cv2
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-import psycopg2
-from io import BytesIO
-from PIL import Image
-
-face_classifier = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
-
-def get_database_connection():
-    conn = psycopg2.connect(
-        database="your_database",
-        user="your_user",
-        password="your_password",
-        host="your_host",
-        port="your_port"
-    )
-    return conn
-
-def compare_faces(detected_face_embedding, database_faces):
-    similarities = {}
-    for name, known_face_embedding in database_faces.items():
-        similarity = cosine_similarity(detected_face_embedding.reshape(1, -1), known_face_embedding.reshape(1, -1))[0][0]
-        similarities[name] = similarity
-
-    best_match = max(similarities, key=similarities.get)
-    best_similarity = similarities[best_match]
-
-    threshold = 0.5
-    if best_similarity > threshold:
-        return best_match, True
-    else:
-        return "Unknown", False
-
-def get_faces_from_database():
-    conn = get_database_connection()
-    cur = conn.cursor()
-
-    cur.execute("SELECT name, image FROM face_data")
-    rows = cur.fetchall()
-
-    database_faces = {}
-    for row in rows:
-        name = row[0]
-        image_data = row[1]
-
-        # Convert image data to numpy array
-        image = np.array(Image.open(BytesIO(image_data)))
-
-        # Get face embedding (assuming you have a function to get it)
-        face_embedding = get_face_embedding(image)
-
-        database_faces[name] = face_embedding
-
-    cur.close()
-    conn.close()
-
-    return database_faces
-
-def detect_faces_image(image_path, scaleFactor=1.1, minNeighbors=5, minSize=(40, 40)):
-    img = cv2.imread(image_path)
-    gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    faces = face_classifier.detectMultiScale(gray_image, scaleFactor=scaleFactor, minNeighbors=minNeighbors, minSize=minSize)
-
-    database_faces = get_faces_from_database()
-
-    for (x, y, w, h) in faces:
-        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 4)
-
-        detected_face = img[y:y+h, x:x+w]
-
-        # Get the detected face embedding (assuming you have a function to get it)
-        detected_face_embedding = get_face_embedding(detected_face)
-
-        # Compare the detected face with faces in the database
-        name, is_match = compare_faces(detected_face_embedding, database_faces)
-
-        if is_match:
-            cv2.putText(img, name, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
-        else:
-            cv2.putText(img, "Unknown", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
-
-    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    plt.figure(figsize=(20,10))
-    plt.imshow(img_rgb)
-    plt.axis('off')
-    plt.show()
-
-# Implement other functions (detect_faces_video, detect_faces_webcam, main) as before
-
-if __name__ == "__main__":
-    input_path = "webcam"  # Change this to the path of your image, video file, or "webcam"
-    main(input_path, scaleFactor=1.1, minNeighbors=5, minSize=(40, 40))
+# Calculate accuracy
+accuracy = accuracy_score(y_test, predictions)
+print("Accuracy:", accuracy)
