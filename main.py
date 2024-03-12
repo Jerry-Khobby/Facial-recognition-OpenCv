@@ -7,6 +7,7 @@ import numpy as np
 
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
+
 def load_known_encodings(known_faces_folder):
     known_encodings = []
     known_names = []
@@ -27,6 +28,9 @@ def load_known_encodings(known_faces_folder):
                 
 
     return known_encodings, known_names
+
+
+
 
 def recognize_faces(video_capture, known_encodings, known_names):
     marked_attendance = set()  # To store names for which attendance is already marked
@@ -119,6 +123,8 @@ def mark_attendance(name):
 
 if __name__ == "__main__":
     video_capture = cv2.VideoCapture(0)  # Use the camera (0 or 1) or video file path
+    video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
     
     # Load known face encodings and names from a folder
     known_faces_folder = "./Jeremiah Anku Coblah"
