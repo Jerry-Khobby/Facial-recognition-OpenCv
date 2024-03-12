@@ -58,8 +58,15 @@ def recognize_faces(video_capture, known_encodings, known_names):
                 if name not in marked_attendance:
                     #Mark attendance only if not already marked 
                     mark_attendance(name)
+                    marked_attendance.add(name)
                 else:
                     print(f"Attendance already marked for today:{name}")
+            else:
+                print("Unknown person.Please register first")
+                
+                
+                #print a message for unknown faces 
+                cv2.putText(frame,"Unknown Person",(x,y-10),cv2.FONT_HERSHEY_SIMPLEX,0.9,(36,255,12),2)
                 
             # Draw rectangle around the face and display name
             cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
@@ -80,19 +87,35 @@ def recognize_faces(video_capture, known_encodings, known_names):
 def mark_attendance(name):
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     
-    # Check if the file exists, if not, create it
-    file_exists = os.path.isfile('attendance.csv')
-    
-    with open('attendance.csv', mode='a', newline='') as file:
-        fieldnames = ['Name', 'Time']
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
+    if name != "Unknown":
+        # Check if the file exists, if not, create it
+        file_exists = os.path.isfile('attendance.csv')
         
-        if not file_exists:
-            writer.writeheader()
+        # Check if the name is already in the attendance file
+        already_marked = False
+        if os.path.isfile('attendance.csv'):
+            with open('attendance.csv', mode='r') as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    if row['Name'] == name:
+                        already_marked = True
+                        break
         
-        writer.writerow({'Name': name, 'Time': timestamp})
-        
-    print(f"Attendance marked for: {name} at {timestamp}")
+        if not already_marked:
+            with open('attendance.csv', mode='a', newline='') as file:
+                fieldnames = ['Name', 'Time']
+                writer = csv.DictWriter(file, fieldnames=fieldnames)
+                
+                if not file_exists:
+                    writer.writeheader()
+                
+                writer.writerow({'Name': name, 'Time': timestamp})
+                
+            print(f"Attendance marked for: {name} at {timestamp}")
+        else:
+            print(f"Attendance already marked for: {name}")
+    else:
+        print("Attendance not marked for unknown person.")
 
 if __name__ == "__main__":
     video_capture = cv2.VideoCapture(0)  # Use the camera (0 or 1) or video file path
