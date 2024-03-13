@@ -46,7 +46,7 @@ def train_recognizer(dataset_path):
     X_train, X_test, y_train, y_test = train_test_split(faces, labels, test_size=0.2, random_state=42)
 
     # Choose the recognizer algorithm (e.g., LBPH)
-    recognizer = cv2.face.LBPHFaceRecognizer_create()
+    recognizer = cv2.face_LBPHFaceRecognizer.create()
 
     # Train the recognizer on the training set
     recognizer.train(X_train, y_train)
@@ -69,5 +69,5 @@ def train_recognizer(dataset_path):
     print("Training complete.")
 
 if __name__ == "__main__":
-    dataset_path = "./Humans"  # Update the path to your folder
+    dataset_path = "./facesData"  # Update the path to your folder
     train_recognizer(dataset_path)

@@ -33,7 +33,7 @@ def load_known_encodings(known_faces_folder):
 
 
 def recognize_faces(video_capture, known_encodings, known_names):
-    marked_attendance = set()  # To store names for which attendance is already marked
+    marked_attendance = set()
     while True:
         ret, frame = video_capture.read()
         if not ret:
@@ -48,36 +48,31 @@ def recognize_faces(video_capture, known_encodings, known_names):
         for (x, y, w, h) in faces:
             face_roi = gray[y:y+h, x:x+w]
             
+            # Perform face alignment if needed
+            
             # Recognize the face
             face_encoding = face_recognition.face_encodings(frame, [(y, x+w, y+h, x)])[0]
+            
             # Compare the face encoding with known encodings
-            matches = face_recognition.compare_faces(known_encodings, face_encoding)
-            name = "Unknown"
-                
-            if True in matches:
-                first_match_index = matches.index(True)
-                name = known_names[first_match_index]
-                
+            distances = face_recognition.face_distance(known_encodings, face_encoding)
+            min_distance_index = np.argmin(distances)
+            min_distance = distances[min_distance_index]
+            
+            if min_distance < 0.6:  # Adjust this threshold as needed
+                name = known_names[min_distance_index]
                 
                 if name not in marked_attendance:
-                    #Mark attendance only if not already marked 
                     mark_attendance(name)
                     marked_attendance.add(name)
                 else:
-                    print(f"Attendance already marked for today:{name}")
+                    print(f"Attendance already marked for today: {name}")
             else:
-                print("Unknown person.Please register first")
-                
-                
-                #print a message for unknown faces 
-                cv2.putText(frame,"Unknown Person",(x,y-10),cv2.FONT_HERSHEY_SIMPLEX,0.9,(36,255,12),2)
+                print("Unknown person. Please register first.")
+                name = "Unknown"
                 
             # Draw rectangle around the face and display name
             cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
-            cv2.putText(frame, name, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36,255,12), 2)
-                
-            # Mark attendance
-            mark_attendance(name)
+            cv2.putText(frame, name, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
         
         # Display the resulting frame
         cv2.imshow('Face Recognition', frame)
@@ -87,6 +82,7 @@ def recognize_faces(video_capture, known_encodings, known_names):
 
     video_capture.release()
     cv2.destroyAllWindows()
+
 
 def mark_attendance(name):
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -127,7 +123,7 @@ if __name__ == "__main__":
     video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
     
     # Load known face encodings and names from a folder
-    known_faces_folder = "./Jeremiah Anku Coblah"
+    known_faces_folder = "./facesData"
     known_encodings, known_names = load_known_encodings(known_faces_folder)
     
     # Start face recognition in real-time
